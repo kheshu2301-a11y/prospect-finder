@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospect Finder — Meridian Build Co</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0f0e0c;--paper:#f5f0e8;--cream:#ede7d9;--gold:#c9a84c;--rust:#b84c2e;--sage:#4a6741;--muted:#7a7268;--border:#d4cabb;--white:#fdfaf5;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;}
+  header{background:var(--ink);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--gold);}
+  .logo{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--gold);letter-spacing:.04em;}
+  .logo span{color:#fff;font-style:italic;}
+  .header-tag{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;}
+  .container{max-width:960px;margin:0 auto;padding:40px 24px 80px;}
+  .page-title{font-family:'DM Serif Display',serif;font-size:2.4rem;line-height:1.15;margin-bottom:6px;}
+  .page-title em{font-style:italic;color:var(--gold);}
+  .page-sub{font-size:.9rem;color:var(--muted);margin-bottom:36px;font-weight:300;}
+  .panel{background:var(--white);border:1.5px solid var(--border);border-radius:4px;padding:24px 28px;margin-bottom:24px;}
+  .panel-title{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+  .row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+  .row input{flex:1;font-family:'DM Mono',monospace;font-size:.82rem;padding:10px 14px;border:1.5px solid var(--border);border-radius:3px;background:var(--paper);color:var(--ink);outline:none;transition:border-color .2s;}
+  .row input:focus{border-color:var(--gold);}
+  .btn-gold{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.06em;padding:10px 18px;border:1.5px solid var(--gold);border-radius:3px;background:transparent;color:var(--gold);cursor:pointer;white-space:nowrap;transition:all .2s;}
+  .btn-gold:hover{background:var(--gold);color:var(--ink);}
+  .sdk-status{font-size:.78rem;padding:8px 12px;border-radius:3px;margin-top:6px;display:none;}
+  .sdk-status.ok{display:block;background:#e8f5e9;color:var(--sage);border:1px solid #a5d6a7;}
+  .sdk-status.err{display:block;background:#fff0ec;color:var(--rust);border:1px solid #f0a090;}
+  .note{font-size:.74rem;color:var(--muted);line-height:1.7;margin-top:8px;}
+  .note a{color:var(--gold);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+  @media(max-width:580px){.grid2{grid-template-columns:1fr;}}
+  .fg{display:flex;flex-direction:column;gap:6px;}
+  .fg label{font-size:.75rem;font-weight:500;color:var(--muted);letter-spacing:.04em;}
+  .fg input,.fg select{font-family:'DM Sans',sans-serif;font-size:.88rem;padding:10px 14px;border:1.5px solid var(--border);border-radius:3px;background:var(--paper);color:var(--ink);outline:none;transition:border-color .2s;appearance:none;}
+  .fg input:focus,.fg select:focus{border-color:var(--gold);}
+  .city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px;margin-top:6px;}
+  .chip{font-family:'DM Mono',monospace;font-size:.72rem;padding:7px 10px;border:1.5px solid var(--border);border-radius:3px;background:var(--paper);color:var(--muted);cursor:pointer;text-align:center;transition:all .15s;user-select:none;}
+  .chip:hover{border-color:var(--gold);color:var(--gold);}
+  .chip.on{border-color:var(--gold);background:var(--gold);color:var(--ink);font-weight:500;}
+  .footer-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;}
+  .srow{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);}
+  .srow input[type=range]{accent-color:var(--gold);width:100px;}
+  .sval{font-family:'DM Mono',monospace;font-size:.8rem;color:var(--ink);min-width:36px;}
+  .btn-search{font-family:'DM Serif Display',serif;font-size:1rem;padding:12px 36px;background:var(--ink);color:var(--gold);border:2px solid var(--ink);border-radius:3px;cursor:pointer;transition:all .2s;}
+  .btn-search:hover{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .btn-search:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-stop{font-family:'DM Mono',monospace;font-size:.72rem;padding:8px 16px;border:1.5px solid var(--rust);border-radius:3px;background:transparent;color:var(--rust);cursor:pointer;transition:all .2s;display:none;}
+  .btn-stop:hover{background:var(--rust);color:#fff;}
+  .btn-stop.on{display:inline-block;}
+  .status-wrap{display:none;flex-direction:column;gap:8px;padding:14px 18px;background:var(--cream);border:1px solid var(--border);border-radius:3px;margin-bottom:16px;font-size:.82rem;color:var(--muted);}
+  .status-wrap.on{display:flex;}
+  .st-top{display:flex;align-items:center;gap:10px;}
+  .spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .prog-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+  .prog-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .3s;width:0;}
+  .prog-lbl{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);}
+  .err-box{background:#fff0ec;border:1.5px solid #f0a090;border-radius:3px;padding:14px 18px;font-size:.85rem;color:var(--rust);margin-bottom:16px;display:none;line-height:1.6;}
+  .res-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .res-header h2{font-family:'DM Serif Display',serif;font-size:1.3rem;}
+  .res-meta{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);}
+  .res-btns{display:flex;gap:8px;}
+  .btn-exp{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:.06em;padding:8px 14px;border:1.5px solid var(--sage);border-radius:3px;background:transparent;color:var(--sage);cursor:pointer;transition:all .2s;}
+  .btn-exp:hover{background:var(--sage);color:#fff;}
+  #rlist{display:flex;flex-direction:column;gap:10px;}
+  .card{background:var(--white);border:1.5px solid var(--border);border-radius:4px;padding:18px 20px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;animation:up .4s ease both;transition:border-color .2s;}
+  .card:hover{border-color:var(--gold);}
+  @keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .c-cat{font-size:.75rem;color:var(--gold);font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+  .c-name{font-family:'DM Serif Display',serif;font-size:1.05rem;margin-bottom:4px;}
+  .c-addr{font-size:.8rem;color:var(--muted);margin-bottom:8px;line-height:1.4;}
+  .c-phone{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--ink);text-decoration:none;padding:5px 10px;border:1px solid var(--border);border-radius:2px;background:var(--paper);transition:all .15s;}
+  .c-phone:hover{border-color:var(--gold);color:var(--gold);}
+  .c-acts{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+  .badge{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--rust);border:1px solid var(--rust);border-radius:2px;padding:3px 8px;}
+  .c-rating{font-size:.75rem;color:var(--muted);text-align:right;}
+  .btn-wa{font-family:'DM Mono',monospace;font-size:.7rem;letter-spacing:.06em;padding:7px 12px;background:#25d366;color:#fff;border:none;border-radius:2px;cursor:pointer;text-decoration:none;display:inline-block;transition:opacity .15s;}
+  .btn-wa:hover{opacity:.85;}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty .big{font-family:'DM Serif Display',serif;font-size:3rem;opacity:.25;margin-bottom:8px;}
+  .panel textarea{width:100%;font-family:'DM Sans',sans-serif;font-size:.85rem;line-height:1.6;padding:12px 14px;border:1.5px solid var(--border);border-radius:3px;background:var(--paper);color:var(--ink);outline:none;resize:vertical;min-height:90px;transition:border-color .2s;}
+  .panel textarea:focus{border-color:var(--gold);}
+  .tnote{margin-top:7px;font-size:.74rem;color:var(--muted);}
+  #map{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Meridian <span>Build Co</span></div>
+  <div class="header-tag">Prospect Finder v2.1</div>
+</header>
+
+<div class="container">
+  <h1 class="page-title">Find businesses with<br><em>no website.</em></h1>
+  <p class="page-sub">Accurate website check · Cards appear one by one · ~20–30 sec.</p>
+
+  <!-- API KEY -->
+  <div class="panel">
+    <div class="panel-title">API Key</div>
+    <div class="row">
+      <input type="password" id="apiKey" placeholder="AIza…" autocomplete="off">
+      <button class="btn-gold" onclick="connectSDK()">Connect →</button>
+      <button class="btn-gold" style="border-color:var(--rust);color:var(--rust)" onclick="clearKey()">Clear</button>
+    </div>
+    <div id="sdkStatus" class="sdk-status"></div>
+    <p class="note">Google Cloud Console → Enable <strong>Maps JavaScript API</strong> + <strong>Places API</strong> → Credentials → Create API Key.</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="panel">
+    <div class="panel-title">Search</div>
+    <div class="grid2">
+      <div class="fg">
+        <label>Business Type / Niche</label>
+        <input type="text" id="query" placeholder="restaurant, salon, clinic, gym…" value="restaurant">
+      </div>
+      <div class="fg">
+        <label>Filter by State</label>
+        <select id="stateSelect" onchange="filterCities()">
+          <option value="">— All States —</option>
+          <option value="KL">Kuala Lumpur / WP</option>
+          <option value="Selangor">Selangor</option>
+          <option value="Johor">Johor</option>
+          <option value="Penang">Penang</option>
+          <option value="Perak">Perak</option>
+          <option value="Negeri Sembilan">Negeri Sembilan</option>
+          <option value="Melaka">Melaka</option>
+          <option value="Pahang">Pahang</option>
+          <option value="Kelantan">Kelantan</option>
+          <option value="Terengganu">Terengganu</option>
+          <option value="Kedah">Kedah</option>
+          <option value="Sabah">Sabah</option>
+          <option value="Sarawak">Sarawak</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Select City</label>
+      <div class="city-grid" id="cityGrid"></div>
+    </div>
+    <div class="grid2" style="margin-top:16px;margin-bottom:0">
+      <div class="fg">
+        <label>Search Radius</label>
+        <div class="srow" style="margin-top:4px">
+          <input type="range" id="radius" min="500" max="20000" step="500" value="3000"
+                 oninput="document.getElementById('rval').textContent=(this.value/1000)+'km'">
+          <span class="sval" id="rval">3km</span>
+        </div>
+      </div>
+      <div class="fg">
+        <label>How Many to Check</label>
+        <div class="srow" style="margin-top:4px">
+          <input type="range" id="maxCheck" min="10" max="60" step="10" value="20"
+                 oninput="document.getElementById('mcVal').textContent=this.value">
+          <span class="sval" id="mcVal">20</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-row">
+      <button class="btn-stop" id="stopBtn" onclick="stopSearch()">■ Stop</button>
+      <button class="btn-search" id="searchBtn" onclick="runSearch()">Search Prospects →</button>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-wrap" id="statusWrap">
+    <div class="st-top"><div class="spinner"></div><span id="stText">Searching…</span></div>
+    <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    <div class="prog-lbl" id="progLbl"></div>
+  </div>
+  <div class="err-box" id="errBox"></div>
+
+  <!-- RESULTS -->
+  <div id="resSection" style="display:none">
+    <div class="res-header">
+      <div>
+        <h2>No-Website Prospects</h2>
+        <div class="res-meta" id="resMeta"></div>
+      </div>
+      <div class="res-btns">
+        <button class="btn-exp" onclick="exportCSV()">Export CSV</button>
+        <button class="btn-exp" onclick="exportTxt()">Export TXT</button>
+      </div>
+    </div>
+    <div id="rlist"></div>
+  </div>
+
+  <!-- TEMPLATE -->
+  <div class="panel" style="margin-top:28px">
+    <div class="panel-title">WhatsApp Message Template</div>
+    <textarea id="msgTpl">Hi, I came across {name} and noticed you might not have a website yet. I help Malaysian businesses get professional websites starting from RM999. Would you be open to a quick chat? 🙏</textarea>
+    <p class="tnote"><code>{name}</code> is replaced with the business name on each WhatsApp button.</p>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const CITIES = {
+  "KL":[
+    {name:"Kuala Lumpur City",lat:3.1390,lng:101.6869},
+    {name:"Bukit Bintang",lat:3.1466,lng:101.7098},
+    {name:"Chow Kit",lat:3.1626,lng:101.6985},
+    {name:"Bangsar",lat:3.1301,lng:101.6726},
+    {name:"Mont Kiara",lat:3.1718,lng:101.6504},
+    {name:"Wangsa Maju",lat:3.2053,lng:101.7390},
+    {name:"Kepong",lat:3.2114,lng:101.6364},
+    {name:"Cheras KL",lat:3.0873,lng:101.7462},
+  ],
+  "Selangor":[
+    {name:"Kajang",lat:2.9931,lng:101.7877},
+    {name:"Petaling Jaya",lat:3.1073,lng:101.6067},
+    {name:"Shah Alam",lat:3.0733,lng:101.5185},
+    {name:"Subang Jaya",lat:3.0488,lng:101.5825},
+    {name:"Klang",lat:3.0449,lng:101.4456},
+    {name:"Puchong",lat:3.0190,lng:101.6231},
+    {name:"Ampang",lat:3.1478,lng:101.7570},
+    {name:"Rawang",lat:3.3195,lng:101.5739},
+    {name:"Cheras Selangor",lat:3.0500,lng:101.7800},
+    {name:"Serdang",lat:2.9947,lng:101.7120},
+    {name:"Selayang",lat:3.2439,lng:101.6411},
+    {name:"Semenyih",lat:2.9333,lng:101.8469},
+  ],
+  "Johor":[
+    {name:"Johor Bahru",lat:1.4927,lng:103.7414},
+    {name:"Iskandar Puteri",lat:1.4500,lng:103.6500},
+    {name:"Skudai",lat:1.5325,lng:103.6726},
+    {name:"Kluang",lat:2.0258,lng:103.3175},
+    {name:"Muar",lat:2.0440,lng:102.5689},
+    {name:"Batu Pahat",lat:1.8540,lng:102.9325},
+  ],
+  "Penang":[
+    {name:"George Town",lat:5.4141,lng:100.3288},
+    {name:"Butterworth",lat:5.3992,lng:100.3634},
+    {name:"Bayan Lepas",lat:5.2967,lng:100.2656},
+    {name:"Bukit Mertajam",lat:5.3639,lng:100.4648},
+  ],
+  "Perak":[
+    {name:"Ipoh",lat:4.5975,lng:101.0901},
+    {name:"Taiping",lat:4.8514,lng:100.7353},
+    {name:"Teluk Intan",lat:4.0228,lng:101.0228},
+  ],
+  "Negeri Sembilan":[
+    {name:"Seremban",lat:2.7297,lng:101.9381},
+    {name:"Port Dickson",lat:2.5227,lng:101.7966},
+  ],
+  "Melaka":[
+    {name:"Melaka City",lat:2.1896,lng:102.2501},
+    {name:"Ayer Keroh",lat:2.2634,lng:102.2839},
+  ],
+  "Pahang":[
+    {name:"Kuantan",lat:3.8077,lng:103.3260},
+    {name:"Bentong",lat:3.5191,lng:101.9102},
+  ],
+  "Kelantan":[{name:"Kota Bharu",lat:6.1248,lng:102.2380}],
+  "Terengganu":[{name:"Kuala Terengganu",lat:5.3296,lng:103.1370}],
+  "Kedah":[
+    {name:"Alor Setar",lat:6.1248,lng:100.3678},
+    {name:"Sungai Petani",lat:5.6479,lng:100.4878},
+    {name:"Kulim",lat:5.3700,lng:100.5567},
+  ],
+  "Sabah":[
+    {name:"Kota Kinabalu",lat:5.9804,lng:116.0735},
+    {name:"Sandakan",lat:5.8402,lng:118.1179},
+    {name:"Tawau",lat:4.2449,lng:117.8910},
+  ],
+  "Sarawak":[
+    {name:"Kuching",lat:1.5535,lng:110.3593},
+    {name:"Miri",lat:4.3995,lng:113.9914},
+    {name:"Sibu",lat:2.2965,lng:111.8258},
+  ],
+};
+
+let selectedCity = null;
+let prospects = [];
+let svc = null;
+let stopFlag = false;
+
+window.onload = () => {
+  const saved = localStorage.getItem('mbc_key');
+  if (saved) { document.getElementById('apiKey').value = saved; connectSDK(); }
+  renderCities('');
+};
+
+function renderCities(state) {
+  const grid = document.getElementById('cityGrid');
+  grid.innerHTML = '';
+  selectedCity = null;
+  const list = state ? (CITIES[state]||[]) : Object.values(CITIES).flat();
+  list.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'chip';
+    el.textContent = c.name;
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+      el.classList.add('on');
+      selectedCity = c;
+    });
+    grid.appendChild(el);
+  });
+}
+function filterCities() { renderCities(document.getElementById('stateSelect').value); }
+
+function connectSDK() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) { setSdkStatus('Paste your API key first.', false); return; }
+  localStorage.setItem('mbc_key', key);
+  const old = document.getElementById('gscript');
+  if (old) old.remove();
+  svc = null;
+  setSdkStatus('Connecting…', null);
+  const s = document.createElement('script');
+  s.id = 'gscript'; s.async = true;
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=_sdkReady`;
+  s.onerror = () => setSdkStatus('Failed — check your API key and ensure Maps JavaScript API + Places API are enabled.', false);
+  document.head.appendChild(s);
+}
+
+window._sdkReady = function() {
+  const map = new google.maps.Map(document.getElementById('map'), {center:{lat:3.139,lng:101.687},zoom:12});
+  svc = new google.maps.places.PlacesService(map);
+  setSdkStatus('✓ Connected — select a city and search.', true);
+};
+
+function setSdkStatus(msg, ok) {
+  const el = document.getElementById('sdkStatus');
+  el.textContent = msg;
+  el.className = 'sdk-status' + (ok===true?' ok':ok===false?' err':'');
+  el.style.display = 'block';
+}
+function clearKey() {
+  localStorage.removeItem('mbc_key');
+  document.getElementById('apiKey').value = '';
+  svc = null;
+  document.getElementById('sdkStatus').style.display = 'none';
+}
+
+function showStatus(msg) { document.getElementById('stText').textContent=msg; document.getElementById('statusWrap').classList.add('on'); }
+function hideStatus()    { document.getElementById('statusWrap').classList.remove('on'); }
+function setProgress(n,total){
+  const pct = total?Math.round(n/total*100):0;
+  document.getElementById('progFill').style.width = pct+'%';
+  document.getElementById('progLbl').textContent = `${n} / ${total} checked`;
+}
+function showErr(msg){ const e=document.getElementById('errBox'); e.textContent=msg; e.style.display='block'; }
+function hideErr(){ document.getElementById('errBox').style.display='none'; }
+
+function stopSearch() {
+  stopFlag = true;
+  document.getElementById('stopBtn').classList.remove('on');
+  document.getElementById('searchBtn').disabled = false;
+  hideStatus();
+}
+
+// ── Search
+function runSearch() {
+  hideErr();
+  prospects = [];
+  stopFlag = false;
+  document.getElementById('resSection').style.display = 'none';
+  document.getElementById('rlist').innerHTML = '';
+  document.getElementById('progFill').style.width = '0';
+  document.getElementById('progLbl').textContent = '';
+
+  if (!svc)          { showErr('Not connected. Paste your API key and click Connect first.'); return; }
+  if (!selectedCity) { showErr('Please click a city to select it.'); return; }
+  const query  = document.getElementById('query').value.trim();
+  const radius = parseInt(document.getElementById('radius').value);
+  if (!query) { showErr('Enter a business type.'); return; }
+
+  document.getElementById('searchBtn').disabled = true;
+  document.getElementById('stopBtn').classList.add('on');
+  showStatus(`Searching "${query}" near ${selectedCity.name}…`);
+
+  const max = parseInt(document.getElementById('maxCheck').value);
+
+  svc.nearbySearch({
+    location: new google.maps.LatLng(selectedCity.lat, selectedCity.lng),
+    radius,
+    keyword: query,
+  }, (res, status, pag) => collectPages(res, status, pag, [], max));
+}
+
+// ── Collect pages until we have enough listings (each page = up to 20)
+function collectPages(res, status, pag, acc, max) {
+  const OK = google.maps.places.PlacesServiceStatus.OK;
+  const ZR = google.maps.places.PlacesServiceStatus.ZERO_RESULTS;
+
+  if (stopFlag) { startChecking(acc, max); return; }
+
+  if (status !== OK && status !== ZR) {
+    hideStatus();
+    showErr('Google Places error: ' + status + '. Ensure both Maps JavaScript API and Places API are enabled.');
+    finishUI();
+    return;
+  }
+
+  const all = acc.concat(res || []);
+  showStatus(`Collecting listings… page gave ${(res||[]).length}, total ${all.length}`);
+
+  // Need more, and Google has another page, and we haven't hit Google's 60 max
+  if (all.length < max && pag && pag.hasNextPage && all.length < 60) {
+    // Google needs a moment before the next page token is valid
+    setTimeout(() => {
+      try {
+        pag.nextPage((r, s, p) => collectPages(r, s, p, all, max));
+      } catch(e) {
+        startChecking(all, max);
+      }
+    }, 2500);
+  } else {
+    startChecking(all, max);
+  }
+}
+
+function startChecking(all, max) {
+  if (!all.length) {
+    hideStatus();
+    showErr('No listings found. Try a wider radius or different niche.');
+    finishUI();
+    return;
+  }
+  const toCheck = all.slice(0, max);
+  showStatus(`Collected ${all.length} listings — now checking ${toCheck.length} for websites…`);
+  checkSequential(toCheck, 0);
+}
+
+// ── Check ONE at a time — card appears as soon as found
+function checkSequential(places, idx) {
+  if (stopFlag) { finishUI(); finalizeMeta(places.length); return; }
+
+  if (idx >= places.length) {
+    hideStatus();
+    finishUI();
+    finalizeMeta(places.length);
+    return;
+  }
+
+  setProgress(idx, places.length);
+  document.getElementById('stText').textContent =
+    `Checking ${places.length} businesses… ${idx} done, ${prospects.length} found`;
+
+  const pl = places[idx];
+  svc.getDetails(
+    { placeId: pl.place_id, fields: ['name','website','formatted_phone_number','international_phone_number','formatted_address','rating','user_ratings_total','types'] },
+    (det, st) => {
+      if (st === google.maps.places.PlacesServiceStatus.OK && det && !det.website) {
+        const phone = det.international_phone_number || det.formatted_phone_number || '';
+        const p = {
+          name:    det.name || pl.name,
+          address: det.formatted_address || pl.vicinity || '—',
+          phone,
+          rating:  det.rating || pl.rating || null,
+          reviews: det.user_ratings_total || pl.user_ratings_total || 0,
+          types:   (det.types||pl.types||[]).filter(t=>!['establishment','point_of_interest'].includes(t)).slice(0,2).join(', ').replace(/_/g,' ')
+        };
+        prospects.push(p);
+        renderCard(p, prospects.length - 1);
+        if (prospects.length === 1) document.getElementById('resSection').style.display = 'block';
+        document.getElementById('resMeta').textContent = `${prospects.length} found so far…`;
+      }
+      setProgress(idx+1, places.length);
+      // Small delay then next
+      setTimeout(() => checkSequential(places, idx+1), 200);
+    }
+  );
+}
+
+function finishUI() {
+  document.getElementById('searchBtn').disabled = false;
+  document.getElementById('stopBtn').classList.remove('on');
+}
+function finalizeMeta(total) {
+  const found = prospects.length;
+  document.getElementById('resMeta').textContent =
+    `${found} no-website business${found!==1?'es':''} out of ${total} checked · ${selectedCity.name}`;
+  if (found === 0) {
+    document.getElementById('rlist').innerHTML =
+      `<div class="empty"><div class="big">∅</div><p>All checked businesses have websites.<br>Try a different niche or wider area.</p></div>`;
+    document.getElementById('resSection').style.display = 'block';
+  }
+}
+
+// ── Render card
+function renderCard(p, idx) {
+  const tpl = document.getElementById('msgTpl').value;
+  const msg = tpl.replace(/{name}/g, p.name);
+  const raw = (p.phone||'').replace(/\s+/g,'');
+  const num = raw.replace(/^\+/,'');
+  const wa  = num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : '';
+
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.style.animationDelay = '0s';
+  el.innerHTML = `
+    <div>
+      <div class="c-cat">${p.types||'Business'}</div>
+      <div class="c-name">${x(p.name)}</div>
+      <div class="c-addr">📍 ${x(p.address)}</div>
+      ${raw?`<a class="c-phone" href="tel:${raw}">📞 ${x(p.phone)}</a>`:'<span style="font-size:.78rem;color:var(--muted)">No phone listed</span>'}
+    </div>
+    <div class="c-acts">
+      <span class="badge">No Website</span>
+      ${p.rating?`<div class="c-rating">⭐ ${p.rating} (${p.reviews})</div>`:''}
+      ${wa?`<a class="btn-wa" href="${wa}" target="_blank">WhatsApp →</a>`:''}
+    </div>`;
+  document.getElementById('rlist').appendChild(el);
+}
+
+function x(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function exportCSV(){
+  if(!prospects.length)return;
+  const rows=[['Name','Address','Phone','Rating','Reviews','Category']];
+  prospects.forEach(p=>rows.push([`"${p.name}"`,`"${p.address}"`,p.phone||'',p.rating||'',p.reviews,`"${p.types}"`]));
+  save('prospects.csv',rows.map(r=>r.join(',')).join('\n'),'text/csv');
+}
+function exportTxt(){
+  if(!prospects.length)return;
+  const tpl=document.getElementById('msgTpl').value;
+  const lines=prospects.map(p=>`${p.name}\n${p.address}\n${p.phone||'No phone'}\n---\n${tpl.replace(/{name}/g,p.name)}\n`);
+  save('prospects.txt',lines.join('\n'),'text/plain');
+}
+function save(name,content,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name;a.click();
+}
+</script>
+</body>
+</html>
